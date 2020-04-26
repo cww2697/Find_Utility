@@ -3,13 +3,13 @@
 #include <dirent.h>
 #include <string.h>
 
-
-void listFiles(const char *path);
+void find_args(const char *path, int nflag, const char* name, int iflag, int inode_num int mflag, int mins, int rflag, int eflag);
+void find(const char *path);
 
 int main(int argc, char **argv)
 {
-    // Directory path to list files
-    char *dir;
+    char *dir, *name;
+    int inode_num, mins, nflag, iflag, mflag, rflag, eflag;
     dir = argv[1];
     
     if(argc <2){
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     else{
 	    dir=argv[1];	
     }
-    listFiles(dir);
+    finds(dir);
 
     return 0;
 }
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 /**
  * Lists all files and sub-directories at given path.
  */
-void listFiles(const char *basePath)
+void find(const char *basePath)
 {
     char path[1000];
     struct dirent *dp;
@@ -56,4 +56,18 @@ void listFiles(const char *basePath)
     }
 
     closedir(dir);
+}
+
+void find_args(const char* path, int nflag, const char* name, int iflag, int inode_num, int mflag, int mins int rflag){
+    if (nflag == 1){}
+    if (iflag == 1){}
+    if (mflag == 1){}
+    if (rflag == 1){}
+    if (eflag == 1){}
+    else{
+        break;  //Exception handling, since if all these are false code should not direct to this find function
+    }
+
+
+
 }
