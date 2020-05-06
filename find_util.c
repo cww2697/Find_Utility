@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		case 'i':   // find by inode number
 			i = 1;
 			inum = optarg;
-                inode = atoi(mmin_string);
+            inode = atoi(mmin_string);
 			break;
 		case 'r':   // remove
 			r = 1;
