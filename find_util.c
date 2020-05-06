@@ -1,68 +1,68 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <time.h>
 
 
-void find(const char *path, int n, const char *name, int m, int mmin, int i, const char *inum);
+void find(const char *path, int n, const char *name, int m, int mmin, int m_ident);
 
 int main(int argc, char **argv)
 {
-    // Directory path to list files
-   /* char *dir;
-    dir = argv[1];
-    
-    if(argc <2){
-	    dir=".";
-    }
-    else{
-	    dir=argv[1];	
-    }
-    find(dir);*/
 
-    int		w, n, m, i, a, mmin;
+
+    int		w, n, m, i, a, mmin, m_ident, inode;
 	char  *where, *name, *mmin_string, *inum, *action;
 	while (1) {
 		char		c;
-
-	
-
-		c = getopt(argc, argv, "w:n:m:i:a:");	
+		c = getopt(argc, argv, "w:n:m:i:re:");
 
 		if (c == -1) {
 			break;
 		}
 		switch (c) {
-		case 'w':
+		case 'w':   // where to look
 			w = 1;
 			where = optarg;
-			//printf("where: %s\n", optarg);
 			break;
-		case 'n':
+		case 'n':   // find by name
 			n = 1;
 			name = optarg;
-			//printf("name: %s\n", optarg);
 			break;
-		case 'm':
+		case 'm':   // find by modified minutes
 			m = 1;
 			mmin_string = optarg;
+            if(strncmp(mmin_string, "-", 1)){
+                m_ident = 1;
+            }
+            else if(strncmp(mmin_string, "+", 1)){
+                m_ident = -1;
+            }
+            else{
+                m_ident = 0;
+            }
 			mmin = atoi(mmin_string);
-			//printf("mmin: %d\n", mmin);
+            mmin=mmin*60;
+			printf("mmin: %d\n", mmin);
 			break;
-		case 'i':
+		case 'i':   // find by inode number
 			i = 1;
 			inum = optarg;
-			//printf("inum: %s\n", optarg);
+                inode = atoi(mmin_string);
 			break;
-		case 'a':
-			a = 1;
-			action = optarg;
-			//printf("action: %s\n", optarg);
+		case 'r':   // remove
+			r = 1;
 			break;
+        case 'e':   // execute
+            e = 1;
+            action = optarg;
+            break;
 		case '?':
+            // Help case
 		default:
 			printf("An invalid option detected.\n");
 		}
@@ -71,23 +71,27 @@ int main(int argc, char **argv)
     if(w==0){
 		where = ".";
 	}
-
-    find(where, n , name, m, mmin);
+    
+    printf("Variables prior to function call:\nw = %d\nn = %d\nm = %d\n", w,n,m);
+    find(where, n , name, m, mmin, m_ident);
 
     return 0;
 }
 
 
-/**
+/*
  * Lists all files and sub-directories at given path.
  */
-void find(const char *basePath, int n, const char *name)
+void find(const char *basePath, int n, const char *name, int m, int mmin, int m_ident)
 {
     char path[1000];
+    ino_t file_inode;
+    time_t mod_time;
+    time_t current_epoch;
+    struct stat filestat;
     struct dirent *dp;
     DIR *dir = opendir(basePath);
-    //printf("%d %s\n", n ,name);
-    
+    current_epoch = time(NULL);
     
     // Unable to open directory stream
     if (!dir){
@@ -98,50 +102,147 @@ void find(const char *basePath, int n, const char *name)
     {
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
+            stat(path, &filestat);
+            mod_time = filestat.st_mtime;
+            file_inode = filestat.st_ino;
+            
+            // Find by name
             if(n==1){
                 if(strcmp(dp->d_name, name) == 0){
-                    if(m==1){
-
+                    
+                    // Find by modified time
+                   if(m==1){
+                       if(m_ident == 1){
+                           if(mod_time < current_epoch-mmin){
+                               if(i == 1){
+                                   if(mod_time < current_epoch-mmin){
+                               }
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                               printf("%s\n", path);
+                           }
+                           else{
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                           }
+                       }
+                       
+                       else if(m_ident == 0){
+                           if(mod_time == current_epoch-mmin){
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                               printf("%s\n", path);
+                           }
+                           else{
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                           }
+                       }
+                       
+                       else if(m_ident == -1){
+                           if(mod_time > current_epoch-mmin){
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                               printf("%s\n", path);
+                           }
+                           else{
+                               strcpy(path, basePath);
+                               strcat(path, "/");
+                               strcat(path, dp->d_name);
+                           }
+                       }
                     }
+                    
+                    //else for modified time
                     else{
+                        strcpy(path, basePath);
+                        strcat(path, "/");
+                        strcat(path, dp->d_name);
 
+                        printf("%s\n", path);
                     }
+                     
+                }
+            
+                else{
                     strcpy(path, basePath);
                     strcat(path, "/");
                     strcat(path, dp->d_name);
-                    //printf("file name: %s\n", dp->d_name);
-                    //printf("Original path: %s\n", path); 
-                    printf("%s\n", path);   
-            
                 }
             }
+            
+            // else for case n != 1
             else{
+                
+                // find by time modified
                 if(m==1){
-                    
+                    if (m_ident == 1){
+                        if(mod_time < current_epoch-mmin){  // files modified more than mmin
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                            printf("%s\n", path);
+                        }
+                        else{
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                        }
+                    }
+                    else if(m_ident == 0){  //files modified exactly mmin
+                        if(mod_time == current_epoch-mmin){
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                            printf("%s\n", path);
+                        }
+                        else{
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                        }
+                    }
+                    else if(m_ident == -1){ // files modified less than mmin
+                        if(mod_time > current_epoch-mmin){
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                            printf("%s\n", path);
+                        }
+                        else{
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                        }
+                    }
                 }
-                 else{
-                        
+                
+                //else for time modified
+                else{
+                    strcpy(path, basePath);
+                    strcat(path, "/");
+                    strcat(path, dp->d_name);
+                    printf("%s\n", path);
                 }
-                //printf("file name: %s\n", dp->d_name);
-                //printf("Original path: %s\n", path); 
-                strcpy(path, basePath);
-                strcat(path, "/");
-                strcat(path, dp->d_name);
-                printf("%s\n", path);   
-            
+               
             }
-
-            strcpy(path, basePath);
-            strcat(path, "/");
-            strcat(path, dp->d_name);
-            find(path, n, name);
-            //printf("%s\n", dp->d_name);
-            //printf("%s\n", path);
-            // Construct new path from our base path
             
+            find(path, n, name, m, mmin, m_ident);  // recursive call of function
+            
+            /*strcpy(path, basePath);
+            *strcat(path, "/");
+            *strcat(path, dp->d_name);
+            *find(path, n, name, m, mmin, m_ident);
+            *Construct new path from our base path
+            */
             
         }
     }
 
-    closedir(dir);
+    closedir(dir);  // once finished close the directory
 }
