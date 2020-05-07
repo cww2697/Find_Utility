@@ -9,7 +9,7 @@
 #include <time.h>
 
 
-void find(const char *path, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode);
+void find(const char *path, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode, int r);
 
 int main(int argc, char **argv)
 {
@@ -18,6 +18,7 @@ int main(int argc, char **argv)
     int		w, n, m, i, e, r, mmin, m_ident;
     ino_t inode;
 	char  *where, *name, *mmin_string, *inum, *action;
+    
 	while (1) {
 		char		c;
 		c = getopt(argc, argv, "w:n:m:i:re:");
@@ -63,11 +64,14 @@ int main(int argc, char **argv)
         case 'e':   // execute
             e = 1;
             action = optarg;
+            printf("%s\n", action);
             break;
 		case '?':
             // Help case
 		default:
 			printf("An invalid option detected.\n");
+            return 0;
+            break;
 		}
 	}
 
@@ -77,7 +81,7 @@ int main(int argc, char **argv)
     
     
     //printf("Variables prior to function call:\nw = %d\nn = %d\nm = %d\ni = %d\ninode = %llu\n", w,n,m,i,inode);
-    find(where, n , name, m, mmin, m_ident, i, inode);
+    find(where, n , name, m, mmin, m_ident, i, inode, r);
 
     return 0;
 }
@@ -90,7 +94,7 @@ int main(int argc, char **argv)
 /*
  * Lists all files and sub-directories at given path.
  */
-void find(const char *basePath, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode)
+void find(const char *basePath, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode, int r)
 {
     char path[1000];
     ino_t file_inode = 0;
@@ -100,7 +104,7 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
     struct dirent *dp;
     DIR *dir = opendir(basePath);
     current_epoch = time(NULL);
-    //printf("Variables in function call:\nn = %d\nm = %d\ni = %d\ninode = %llu\n",n,m,i,inode);
+    //printf("Variables in function call:\nn = %d\nm = %d\ni = %d\ninode = %llu\nr = %d\n",n,m,i,inode,r);
     
     // Unable to open directory stream
     if (!dir){
@@ -131,6 +135,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                         strcat(path, "/");
                                         strcat(path, dp->d_name);
                                         printf("%s\n", path);
+                                        if(r==1){
+                                            printf("Removed the following path: %s\n", path);
+                                            remove(path);
+                                        }
                                     }
                                     else{
                                         strcpy(path, basePath);
@@ -144,6 +152,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                    }
                                 }
                             }
                             //else for mod_time
@@ -163,6 +175,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                         strcat(path, "/");
                                         strcat(path, dp->d_name);
                                         printf("%s\n", path);
+                                        if(r==1){
+                                            printf("Removed the following path: %s\n", path);
+                                            remove(path);
+                                        }
                                     }
                                     else{
                                         strcpy(path, basePath);
@@ -176,6 +192,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                    }
                                 }
                             }
                            
@@ -197,6 +217,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                         strcat(path, "/");
                                         strcat(path, dp->d_name);
                                         printf("%s\n", path);
+                                        if(r==1){
+                                            printf("Removed the following path: %s\n", path);
+                                            remove(path);
+                                        }
                                     }
                                     else{
                                         strcpy(path, basePath);
@@ -210,6 +234,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                    }
                                 }
                             }
                             else{
@@ -230,6 +258,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                 strcat(path, "/");
                                 strcat(path, dp->d_name);
                                 printf("%s\n", path);
+                                if(r==1){
+                                    printf("Removed the following path: %s\n", path);
+                                    remove(path);
+                                }
                             }
                             else{
                                 strcpy(path, basePath);
@@ -242,6 +274,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                             strcat(path, "/");
                             strcat(path, dp->d_name);
                             printf("%s\n", path);
+                            if(r==1){
+                                printf("Removed the following path: %s\n", path);
+                                remove(path);
+                            }
                         }
                     }
                 }
@@ -269,6 +305,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                    }
                                 }
                                 else{
                                     strcpy(path, basePath);
@@ -281,6 +321,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                 strcat(path, "/");
                                 strcat(path, dp->d_name);
                                 printf("%s\n", path);
+                                if(r==1){
+                                    printf("Removed the following path: %s\n", path);
+                                    remove(path);
+                                }
                             }
                         }
                         else{
@@ -298,6 +342,11 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                        
+                                    }
                                 }
                                 else{
                                     strcpy(path, basePath);
@@ -310,6 +359,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                 strcat(path, "/");
                                 strcat(path, dp->d_name);
                                 printf("%s\n", path);
+                                if(r==1){
+                                    printf("Removed the following path: %s\n", path);
+                                    remove(path);
+                                }
                             }
                         }
                         else{
@@ -327,6 +380,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                     strcat(path, "/");
                                     strcat(path, dp->d_name);
                                     printf("%s\n", path);
+                                    if(r==1){
+                                        printf("Removed the following path: %s\n", path);
+                                        remove(path);
+                                    }
                                 }
                                 else{
                                     strcpy(path, basePath);
@@ -339,6 +396,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                                 strcat(path, "/");
                                 strcat(path, dp->d_name);
                                 printf("%s\n", path);
+                                if(r==1){
+                                    printf("Removed the following path: %s\n", path);
+                                    remove(path);
+                                }
                             }
                         }
                         else{
@@ -357,6 +418,10 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                             strcat(path, "/");
                             strcat(path, dp->d_name);
                             printf("%s\n", path);
+                            if(r==1){
+                                printf("Removed the following path: %s\n", path);
+                                remove(path);
+                            }
                         }
                         else{
                             strcpy(path, basePath);
@@ -369,20 +434,16 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                         strcat(path, "/");
                         strcat(path, dp->d_name);
                         printf("%s\n", path);
+                        if(r==1){
+                            printf("Removed the following path: %s\n", path);
+                            remove(path);
+                        }
                     }
                 }
                
             }
             
-            find(path, n, name, m, mmin, m_ident, i, inode);  // recursive call of function
-            
-            /*strcpy(path, basePath);
-            *strcat(path, "/");
-            *strcat(path, dp->d_name);
-            *find(path, n, name, m, mmin, m_ident);
-            *Construct new path from our base path
-            */
-            
+            find(path, n, name, m, mmin, m_ident, i, inode, r);  // recursive call of function
         }
     }
 
