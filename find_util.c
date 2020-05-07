@@ -9,13 +9,14 @@
 #include <time.h>
 
 
-void find(const char *path, int n, const char *name, int m, int mmin, int m_ident);
+void find(const char *path, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode);
 
 int main(int argc, char **argv)
 {
 
 
-    int		w, n, m, i, a, mmin, m_ident, inode;
+    int		w, n, m, i, e, r, mmin, m_ident;
+    ino_t inode;
 	char  *where, *name, *mmin_string, *inum, *action;
 	while (1) {
 		char		c;
@@ -36,10 +37,12 @@ int main(int argc, char **argv)
 		case 'm':   // find by modified minutes
 			m = 1;
 			mmin_string = optarg;
-            if(strncmp(mmin_string, "-", 1)){
+            //printf("%s\n",mmin_string);
+                
+            if(strncmp(mmin_string, "+", 1)==0){
                 m_ident = 1;
             }
-            else if(strncmp(mmin_string, "+", 1)){
+            else if(strncmp(mmin_string, "-", 1)==0){
                 m_ident = -1;
             }
             else{
@@ -47,12 +50,12 @@ int main(int argc, char **argv)
             }
 			mmin = atoi(mmin_string);
             mmin=mmin*60;
-			printf("mmin: %d\n", mmin);
+			//printf("mmin: %d\nm_ident: %d\n", mmin,m_ident);
 			break;
 		case 'i':   // find by inode number
 			i = 1;
 			inum = optarg;
-            inode = atoi(mmin_string);
+            inode = atoi(inum);
 			break;
 		case 'r':   // remove
 			r = 1;
@@ -72,103 +75,178 @@ int main(int argc, char **argv)
 		where = ".";
 	}
     
-    printf("Variables prior to function call:\nw = %d\nn = %d\nm = %d\n", w,n,m);
-    find(where, n , name, m, mmin, m_ident);
+    
+    //printf("Variables prior to function call:\nw = %d\nn = %d\nm = %d\ni = %d\ninode = %llu\n", w,n,m,i,inode);
+    find(where, n , name, m, mmin, m_ident, i, inode);
 
     return 0;
 }
 
 
+
+
+
+
 /*
  * Lists all files and sub-directories at given path.
  */
-void find(const char *basePath, int n, const char *name, int m, int mmin, int m_ident)
+void find(const char *basePath, int n, const char *name, int m, int mmin, int m_ident, int i, ino_t inode)
 {
     char path[1000];
-    ino_t file_inode;
+    ino_t file_inode = 0;
     time_t mod_time;
     time_t current_epoch;
     struct stat filestat;
     struct dirent *dp;
     DIR *dir = opendir(basePath);
     current_epoch = time(NULL);
+    //printf("Variables in function call:\nn = %d\nm = %d\ni = %d\ninode = %llu\n",n,m,i,inode);
     
     // Unable to open directory stream
     if (!dir){
         return;
     }
 
-    while ((dp = readdir(dir)) != NULL)
-    {
+    while ((dp = readdir(dir)) != NULL){
+        //printf("\n\n\n\nhello\n\n\n\n");
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
             stat(path, &filestat);
             mod_time = filestat.st_mtime;
-            file_inode = filestat.st_ino;
+            file_inode = dp->d_ino;
+            //printf("%llu\n", inode);
             
             // Find by name
             if(n==1){
                 if(strcmp(dp->d_name, name) == 0){
-                    
+                    //printf("\n----name compare----\n");
                     // Find by modified time
-                   if(m==1){
-                       if(m_ident == 1){
-                           if(mod_time < current_epoch-mmin){
-                               if(i == 1){
-                                   if(mod_time < current_epoch-mmin){
-                               }
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                               printf("%s\n", path);
-                           }
-                           else{
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                           }
-                       }
+                    if(m==1){
+                        if(m_ident == 1){
+                            //printf("Using m_ident = 1\n");
+                            if(mod_time < current_epoch-mmin){
+                                if(i == 1){
+                                    if(file_inode == inode){
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                        printf("%s\n", path);
+                                    }
+                                    else{
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                    }
+                                }
+                                // else for i == 1
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                            }
+                            //else for mod_time
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                            }
+                        }
                        
-                       else if(m_ident == 0){
-                           if(mod_time == current_epoch-mmin){
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                               printf("%s\n", path);
-                           }
-                           else{
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                           }
-                       }
+                        else if(m_ident == 0){
+                            //printf("Using m_ident = 0\n");
+                            if(mod_time == current_epoch-mmin){
+                                if(i == 1){
+                                    if(file_inode == inode){
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                        printf("%s\n", path);
+                                    }
+                                    else{
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                    }
+                                }
+                                // else for i == 1
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                            }
+                           
                        
-                       else if(m_ident == -1){
-                           if(mod_time > current_epoch-mmin){
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                               printf("%s\n", path);
-                           }
-                           else{
-                               strcpy(path, basePath);
-                               strcat(path, "/");
-                               strcat(path, dp->d_name);
-                           }
-                       }
+                            // else for mod_time
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                            }
+                        }
+                       
+                        else if(m_ident == -1){
+                            //printf("Using m_ident = -1\n");
+                            if(mod_time > current_epoch-mmin){
+                                if(i == 1){
+                                    if(file_inode == inode){
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                        printf("%s\n", path);
+                                    }
+                                    else{
+                                        strcpy(path, basePath);
+                                        strcat(path, "/");
+                                        strcat(path, dp->d_name);
+                                    }
+                                }
+                                // else for i == 1
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                            }
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                            }
+                        }
                     }
                     
                     //else for modified time
                     else{
-                        strcpy(path, basePath);
-                        strcat(path, "/");
-                        strcat(path, dp->d_name);
-
-                        printf("%s\n", path);
+                        //printf("Using else case for -m\n");
+                        if(i == 1){
+                            if(file_inode == inode){
+                                //printf("Inode %llu found!", inode);
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                                printf("%s\n", path);
+                            }
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                            }
+                        }
+                        else{
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                            printf("%s\n", path);
+                        }
                     }
-                     
                 }
-            
+                
+                
                 else{
                     strcpy(path, basePath);
                     strcat(path, "/");
@@ -178,15 +256,32 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
             
             // else for case n != 1
             else{
-                
+                //printf("Using else case for name\n");
                 // find by time modified
                 if(m==1){
+                    //printf("Using m = 1\n");
                     if (m_ident == 1){
+                        //printf("Using m_ident = 1\n");
                         if(mod_time < current_epoch-mmin){  // files modified more than mmin
-                            strcpy(path, basePath);
-                            strcat(path, "/");
-                            strcat(path, dp->d_name);
-                            printf("%s\n", path);
+                            if(i==1){
+                                if(file_inode==inode){
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                }
+                            }
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                                printf("%s\n", path);
+                            }
                         }
                         else{
                             strcpy(path, basePath);
@@ -195,11 +290,27 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                         }
                     }
                     else if(m_ident == 0){  //files modified exactly mmin
+                        //printf("Using m_ident = 0\n");
                         if(mod_time == current_epoch-mmin){
-                            strcpy(path, basePath);
-                            strcat(path, "/");
-                            strcat(path, dp->d_name);
-                            printf("%s\n", path);
+                            if (i==1){
+                                if(file_inode==inode){
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                }
+                            }
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                                printf("%s\n", path);
+                            }
                         }
                         else{
                             strcpy(path, basePath);
@@ -208,11 +319,27 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                         }
                     }
                     else if(m_ident == -1){ // files modified less than mmin
+                        //printf("Using m_ident = -1\n");
                         if(mod_time > current_epoch-mmin){
-                            strcpy(path, basePath);
-                            strcat(path, "/");
-                            strcat(path, dp->d_name);
-                            printf("%s\n", path);
+                            if (i==1){
+                                if(file_inode==inode){
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                    printf("%s\n", path);
+                                }
+                                else{
+                                    strcpy(path, basePath);
+                                    strcat(path, "/");
+                                    strcat(path, dp->d_name);
+                                }
+                            }
+                            else{
+                                strcpy(path, basePath);
+                                strcat(path, "/");
+                                strcat(path, dp->d_name);
+                                printf("%s\n", path);
+                            }
                         }
                         else{
                             strcpy(path, basePath);
@@ -224,15 +351,30 @@ void find(const char *basePath, int n, const char *name, int m, int mmin, int m_
                 
                 //else for time modified
                 else{
-                    strcpy(path, basePath);
-                    strcat(path, "/");
-                    strcat(path, dp->d_name);
-                    printf("%s\n", path);
+                    if(i == 1){
+                        if(file_inode==inode){
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                            printf("%s\n", path);
+                        }
+                        else{
+                            strcpy(path, basePath);
+                            strcat(path, "/");
+                            strcat(path, dp->d_name);
+                        }
+                    }
+                    else{
+                        strcpy(path, basePath);
+                        strcat(path, "/");
+                        strcat(path, dp->d_name);
+                        printf("%s\n", path);
+                    }
                 }
                
             }
             
-            find(path, n, name, m, mmin, m_ident);  // recursive call of function
+            find(path, n, name, m, mmin, m_ident, i, inode);  // recursive call of function
             
             /*strcpy(path, basePath);
             *strcat(path, "/");
