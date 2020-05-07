@@ -11,7 +11,7 @@ Concepts of Operating Systems - Programming Project 2
 * find *where-to-look* *criteria* -e <specified unix function>
 
 ## Notes on implemented functionalities:
-* find *where to look* syntax in the program is implemented as find -w <*where to look*>
+* **find *where to look*** syntax in the program is implemented as **find -w <*where to look*>**
 * Specified number of minutes refers to some _**n**_ number of minutes
   * _**+n**_ should be used to find files modified more than _**n**_ minutes ago
   * _**n**_ should be used to find files modified exactly _**n**_ minutes ago
