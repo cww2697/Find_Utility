@@ -9,6 +9,7 @@ Concepts of Operating Systems - Programming Project 2
   * find *where-to-look* -i <specified inode number>
 * find *where-to-look* *criteria* -r
 * find *where-to-look* *criteria* -e <specified unix function>
+* find ? 
 
 ## Notes on implemented functionalities:
 * **find *where to look*** syntax in the program is implemented as **find -w <*where to look*>**
