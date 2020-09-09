@@ -1,4 +1,4 @@
-# Find_Utility
+# Find Utility
 Concepts of Operating Systems - Programming Project 2
 
 Functions like the Linux/Unix find function.
