@@ -2,6 +2,8 @@
 Concepts of Operating Systems - Programming Project 2
 
 Functions like the Linux/Unix find function.
+Currently supports Linux/MacOS.
+Windows support comming soon.
 
 To compile code unzip or git pull, and run make from inside the project directory.
 All indended functionalities have been implemented and tested for accuracy. 
