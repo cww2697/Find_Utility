@@ -1,4 +1,4 @@
-# Source code created by Cody West on 4/25/2020
+// Source code created by Cody West on 4/25/2020
 
 #include <stdio.h>
 #include <stdlib.h>
